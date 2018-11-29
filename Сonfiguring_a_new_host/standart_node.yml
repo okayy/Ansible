@@ -1,0 +1,115 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  tasks:
+  
+#### nrpe configure
+
+    - name: Install nrpe packages
+      yum: state=present name={{ item }}
+      with_items:
+        - nrpe
+        - nagios-plugins
+        - nagios-plugins-users
+        - nagios-plugins-load 
+        - nagios-plugins-swap
+        - nagios-plugins-disk
+        - nagios-plugins-procs
+        
+    - name: NRPE Add check_disk 
+      lineinfile:
+        dest: /etc/nagios/nrpe.cfg
+        regexp: '^command\[check_disk\]=\/usr\/lib64\/nagios\/plugins\/check_disk(.*)$'
+        line: 'command[check_disk]=/usr/lib64/nagios/plugins/check_disk -w 15% -c 10%'
+        
+    - name: NRPE Add check_load
+      lineinfile:
+        dest: /etc/nagios/nrpe.cfg
+        regexp: '^command\[check_load\]=\/usr\/lib64\/nagios\/plugins\/check_load(.*)$'
+        line: 'command[check_load]=/usr/lib64/nagios/plugins/check_load -r -w 30,25,20 -c 40,35,31'
+        
+    - name: NRPE Add check_memory
+      lineinfile:
+        dest: /etc/nagios/nrpe.cfg
+        regexp: '^command\[check_memory\]=\/etc\/nagios\/CustomChecks\/check_memory.sh(.*)$'
+        line: 'command[check_memory]=/etc/nagios/CustomChecks/check_memory.sh -w 95 -c 98'
+
+    - name: NRPE Add check_total_crocs
+      lineinfile:
+        dest: /etc/nagios/nrpe.cfg
+        regexp: '^command[check_total_procs]=/usr/lib64/nagios/plugins/check_procs(.*)$'
+        line: 'command[check_total_procs]=/usr/lib64/nagios/plugins/check_procs -w 500 -c 550'
+        
+    - name: NRPE Add icinga to allowed_hosts
+      lineinfile:
+        dest: /etc/nagios/nrpe.cfg
+        regexp: '^allowed_hosts=(.*)$'
+        line: 'allowed_hosts=IP_ICINGA_SERVER'
+        
+    - name: NRPE Copy check_memory.sh to target host
+      copy:
+        src: ./check_memory.sh
+        dest: /etc/nagios/CustomChecks/
+        owner: root
+        group: root
+        mode: 0555
+            
+    - name: NRPE Restart
+      service:
+        name: nrpe.service
+        state: restarted
+        
+#### ssh configure     
+        
+    - name: SSH PermitRootLogin no
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin(.*)$'
+        line: 'PermitRootLogin no'
+        
+    - name: SSH PasswordAuthentication no
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication(.*)$'
+        line: 'PasswordAuthentication no'
+        
+    - name: SSH Restart
+      service:
+        name: sshd.service
+        state: restarted
+
+#### firewalld configure
+
+    - name: Firewalld service enable and start
+      service:
+        name: firewalld
+        enabled: yes
+        state: started
+
+    - name: Firewalld Add internal interface into trusted zone
+      firewalld:
+        zone: trusted
+        interface: aggi
+        permanent: true
+        state: enabled
+        
+    - name: Firewalld Add external interface into public zone
+      firewalld:
+        zone: public
+        interface: agge
+        permanent: true
+        state: enabled
+
+    - name: Firewalld Open port for icinga nrpe
+      firewalld:
+        rich_rule: 'rule family="ipv4" source address="IP_ICINGA_SERVER" port port="5666" protocol="tcp" accept'
+        permanent: true
+        state: enabled        
+        
+    - name: Firewalld service reload
+      service:
+        name: firewalld
+        state: reloaded
+        
