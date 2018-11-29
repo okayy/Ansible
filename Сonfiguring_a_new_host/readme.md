@@ -1,11 +1,11 @@
-1) Add host in hosts_list 
+1) Add host in hosts_list
 [<host-name>]
 <host-ip>
 
 [<host-name>:vars]
 ansible_connection=ssh 
 ansible_ssh_user=root
-ansible_ssh_pass=<host-root-password>
+ansible_ssh_pass=host-root-password
 
 2) Add key in centos.pem
 
