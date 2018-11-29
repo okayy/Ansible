@@ -1,0 +1,7 @@
+[host-1]
+host_ip_addr
+
+#[host-1:vars]
+ansible_connection=ssh 
+ansible_ssh_user=root
+ansible_ssh_pass=Pass_for_root

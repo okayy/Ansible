@@ -1,0 +1,40 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  
+  vars:
+    ssh_pubkey_centos: "{{ lookup('file', './centos.pub') }}"
+
+
+    
+  tasks:
+    - name: Ensure group "somegroup" exists
+      group:
+        name: somegroup
+        state: present
+        
+####  
+
+    - name: Add the user 'centos' with a specific uid
+      user:
+        name: centos
+        uid: 2001
+        group: somegroup
+
+    - name: Add new SSH Public Key for centos user
+      authorized_key: user=centos key="{{ssh_pubkey_centos}}" state=present
+      register: add_key_result
+      ignore_errors: True
+      
+####
+
+    - name: Add sudo rights
+      blockinfile:
+        dest: /etc/sudoers.d/somegroup
+        create: yes
+        block: |
+          %somegroup ALL=(ALL)  NOPASSWD: ALL
+          
+
+     
