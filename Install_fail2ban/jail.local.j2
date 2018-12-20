@@ -1,0 +1,67 @@
+[DEFAULT]
+ignoreip = 127.0.0.1/8
+ignorecommand =
+
+# "bantime" is the number of seconds that a host is banned.
+bantime  = 3600
+
+# A host is banned if it has generated "maxretry" during the last "findtime"
+# seconds.
+findtime  = 600
+
+# "maxretry" is the number of failures before a host get banned.
+maxretry = 5
+
+filter = %(__name__)s
+
+
+protocol = tcp
+
+# Specify chain where jumps would need to be added in iptables-* actions
+chain = INPUT
+
+# Ports to be banned
+# Usually should be overridden in a particular jail
+port = 0:65535
+
+# Format of user-agent https://tools.ietf.org/html/rfc7231#section-5.5.3
+fail2ban_agent = Fail2Ban/%(fail2ban_version)s
+
+#
+# Action shortcuts. To be used to define action parameter
+
+# Default banning action (e.g. iptables, iptables-new,
+# iptables-multiport, shorewall, etc) It is used to define
+# action_* variables. Can be overridden globally or per
+# section within jail.local file
+banaction = iptables-multiport
+banaction_allports = iptables-allports
+
+[sshd]
+
+port    = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+
+
+[sshd-ddos]
+# This jail corresponds to the standard configuration in Fail2ban.
+# The mail-whois action send a notification e-mail with a whois request
+# in the body.
+port    = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+
+
+[dropbear]
+
+port     = ssh
+logpath  = %(dropbear_log)s
+backend  = %(dropbear_backend)s
+
+
+[selinux-ssh]
+
+port     = ssh
+logpath  = %(auditd_log)s
+
