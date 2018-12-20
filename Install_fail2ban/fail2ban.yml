@@ -20,7 +20,6 @@
         name: "{{ item }}"
         state: installed
         update_cache: yes
-        cache_valid_time: 3600
       with_items:
         - fail2ban
       when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
