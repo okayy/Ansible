@@ -1,0 +1,45 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  
+  vars:
+    user: []
+    group: GROUP_NAME  
+####
+
+  tasks:
+    - name: Create array of users
+      find:
+        path: "./"
+        patterns: '*.pub'
+      sudo: no
+      register: user
+      delegate_to: localhost
+
+    - name: Ensure group exists
+      group:
+        name: "{{group}}"
+        state: present
+ 
+####  
+
+    - name: Add sudo rights
+      blockinfile:
+        dest: /etc/sudoers.d/GROUP_NAME
+        create: yes
+        block: |
+          %{{group}} ALL=(ALL)  NOPASSWD: ALL
+
+    - name: Add the users
+      user:
+        name: "{{ item.path | basename | regex_replace('.pub') }}"
+        groups: "{{ item.path | basename | regex_replace('.pub') }},{{group}}"
+      loop: "{{user.files}}"
+
+    - name: Add new SSH Public Keys for users
+      authorized_key: user="{{ item.path | basename | regex_replace('.pub') }}" key="{{lookup('file', '{{ item.path }}')}}" state=present
+      register: add_key_result
+      loop: "{{user.files}}"
+
+
