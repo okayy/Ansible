@@ -31,6 +31,12 @@
         block: |
           %{{group}} ALL=(ALL)  NOPASSWD: ALL
 
+    - name: Create group for user
+      group:
+        name: "{{ item.path | basename | regex_replace('.pub') }}"
+        state: present
+      loop: "{{user.files}}"
+
     - name: Add the users
       user:
         name: "{{ item.path | basename | regex_replace('.pub') }}"
