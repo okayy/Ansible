@@ -33,6 +33,7 @@
 
     - name: Create group for user
       group:
+<<<<<<< HEAD
         name: "{{ item.path | basename | regex_replace('.pub') }}"
         state: present
       loop: "{{user.files}}"
