@@ -1,0 +1,84 @@
+---
+
+- name: Install dependencies
+  yum:
+    name: socat
+    update_cache: True
+
+- name: Create acme dir
+  file:
+    path: "{{ acme_dest | dirname }}"
+    state: "directory"
+    owner: "{{ acme_sh_become_user }}"
+    group: "{{ acme_sh_become_user }}"
+    mode: "0755"
+
+- name: Create certificate path
+  file:
+    path: "{{ acme_sh_certs_path }}"
+    state: "directory"
+    owner: "{{ acme_sh_become_user }}"
+    group: "{{ acme_sh_become_user }}"
+    mode: "0755"
+
+- name: Copy acme.sh
+  copy:
+    src: acme.sh
+    dest: "{{ acme_dest | dirname }}"
+    owner: "{{ acme_sh_become_user }}"
+    group: "{{ acme_sh_become_user }}"
+    mode: "0544"
+
+- name: Check if service is running by querying the application port
+  wait_for:
+    host: "{{ item }}"
+    port: 80
+    timeout: 5
+    msg: "Timeout waiting for 80 to respond"
+  with_items: "{{ ansible_all_ipv4_addresses }}"
+  register: port_check
+  ignore_errors: yes
+
+- name: Stop service nginx, if started
+  service:
+    name: nginx
+    state: stopped
+  with_items: "{{ port_check.results }}"
+  when: item.failed != True
+
+- name: Get ssl
+  block:
+    - name: Issue acme.sh certificate
+      command: >-
+       ./acme.sh --issue -d {{ domain }} --standalone --cert-home {{ acme_sh_certs_path }} --config-home {{ acme_dest | dirname }} 
+      args:
+        chdir: /opt/letsandcrypt/
+      register: return
+      ignore_errors: yes
+      when: some_vars == "var1"
+
+    - set_fact: out="{{return}}"
+      when: return.changed
+    
+    - name: Issue acme.sh certificate
+      command: >-
+       ./acme.sh --issue -d {{ domain }} --standalone --cert-home {{ acme_sh_certs_path }} --config-home {{ acme_dest | dirname }} 
+      args:
+        chdir: /opt/letsandcrypt/
+      register: return
+      ignore_errors: yes
+      when: some_vars == "var2"
+
+    - set_fact: out="{{return}}"
+      when: return.changed
+    
+  always:
+    - name: Restart service nginx
+      service:
+        name: nginx
+        state: restarted
+
+- name: Something wrong. The certificate has not been updated.
+  fail:
+      msg: "Something wrong. The certificate has not been updated."
+  when: "'Next renewal' not in out.stdout"

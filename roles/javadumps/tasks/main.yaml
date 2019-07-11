@@ -1,0 +1,38 @@
+---
+- name: "Common::JavaDumps | old snapshots"
+  cron:
+    name: "Remove old snapshots"
+    state: "present"
+    hour: 0
+    minute: 0
+    user: "{{ javadumps_user }}"
+    job: "find {{ javadumps_path }} -name 'Snap*.trc' -mtime +1 -exec rm {} \\;"
+
+- name: "Common::JavaDumps | old traces"
+  cron:
+    name: "Remove old traces"
+    state: "present"
+    hour: 0
+    minute: 0
+    user: "{{ javadumps_user }}"
+    job: "find {{ javadumps_path }} -name 'javacore*.txt' -mtime +1 -exec rm {} \\;"
+
+- name: "Common::JavaDumps | old coredumps"
+  cron:
+    name: "Remove old coredumps"
+    state: "present"
+    hour: 0
+    minute: 0
+    user: "{{ javadumps_user }}"
+    job: "find {{ javadumps_path }} -name 'core*.dmp' -mtime +1 -exec rm {} \\;"
+
+- name: "Common::JavaDumps | old heapdumps"
+  cron:
+    name: "Remove old heapdumps"
+    state: "present"
+    hour: 0
+    minute: 0
+    user: "{{ javadumps_user }}"
+    job: "find {{ javadumps_path }} -name 'heapdump*.phd' -mtime +1 -exec rm {} \\;"
+
+

@@ -1,0 +1,6 @@
+---
+
+- name: Update ssl for nginx
+  hosts: "{{ target }}"
+  roles: 
+    - {role: acme, become: yes}

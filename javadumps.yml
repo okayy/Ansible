@@ -1,0 +1,6 @@
+---
+
+- name: Run role JavaDumps
+  hosts: "{{ target }}"
+  roles:
+    - javadumps

@@ -1,0 +1,6 @@
+---
+
+acme_sh_become_user: "root"
+acme_dest: "/opt/letsandcrypt/acme.sh"
+acme_email: "test@gmail.com"
+acme_sh_certs_path: "/etc/ssl/nginx"
